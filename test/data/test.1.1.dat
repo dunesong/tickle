@@ -1,0 +1,11 @@
+foo
+bar
+baz
+# test comment
+ leading space
+	leading tab
+trailing space 
+trailing tab	
+ leading and trailing space 
+	leading and trailing tab	
+small difference with test.1.0.dat
