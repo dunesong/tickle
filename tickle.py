@@ -4,19 +4,21 @@ import sys
 import os
 import getopt
 
-USAGE = 'tickle <tickler_file> [<tickler_file2> ... <tickler_fileN>]'
-
 ################################################################################
+
+def usage():
+  print('tickle <tickler_file> [<tickler_file2> ... <tickler_fileN>]')
 
 def main(argv):
   try:
     opts, args = getopt.getopt(argv, '', [])
-  except getopt.GetoptError:
-    print USAGE
+  except getopt.GetoptError as e:
+    print str(e)
+    usage()
     sys.exit(2)
 
   if len(args) == 0:
-    print USAGE
+    usage()
     
   for filename in args:
     if os.access(filename, os.R_OK):
