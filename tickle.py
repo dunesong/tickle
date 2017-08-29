@@ -1,32 +1,44 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import os
-import getopt
+import argparse
+from tempfile import mkstemp
+from shutil import copystat
 
 ################################################################################
 
-def usage():
-  print('tickle <tickler_file> [<tickler_file2> ... <tickler_fileN>]')
-
 def main(argv):
-  try:
-    opts, args = getopt.getopt(argv, '', [])
-  except getopt.GetoptError as e:
-    print str(e)
-    usage()
-    sys.exit(2)
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-e', '--echo', action='store_true')
+  parser.add_argument('-m', '--merge', action='store_true')
+  parser.add_argument('tickler_file', nargs='+')
+  args = parser.parse_args()
 
-  if len(args) == 0:
-    usage()
-    
-  for filename in args:
+  for filename in args.tickler_file:
     if os.access(filename, os.R_OK):
-      tickler_file = open(filename, 'r')
-      for line in tickler_file:
+      tickler = open(filename, 'r')
+      if args.merge:
+        tmp_fd, tmp_filepath = mkstemp(None, filename + '.', '.', True)
+        tmp_file = open(tmp_filepath, 'w')
+
+      for line in tickler:
         # echo line without modification
-        sys.stdout.write(line)
-      tickler_file.close()
+        if args.echo:
+          sys.stdout.write(line)
+        if args.merge:
+          tmp_file.write(line)
+
+      tickler.close()
+      if args.merge:
+        tmp_file.flush()
+        os.fsync(tmp_fd)
+        os.close(tmp_fd)
+        try:
+          copystat(filename, tmp_filepath)
+        except WindowsError:
+          pass # can't copy file acces time
+        os.replace(tmp_filepath, filename)
 
 ################################################################################
 
