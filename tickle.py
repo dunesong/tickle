@@ -71,11 +71,14 @@ def process_tickle(line):
   if m:
     indent = m.group('indent')
     date_spec = m.group('date_spec')
-    if date_spec: date_spec = date_spec.lower()
+    if date_spec: 
+      date_spec = date_spec.lower()
+    else:
+      # if no date specification, default to daily
+      date_spec = 'daily'
     message = m.group('message')
 
-    if date_spec is None or date_spec == 'daily':
-      # tickle every day
+    if date_spec == 'daily':
       return format_tickle(m.group('message'), m.group('indent'))
   else:
     return ''
