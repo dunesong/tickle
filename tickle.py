@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import re
 from tempfile import mkstemp
 from shutil import copystat
 
@@ -23,8 +24,9 @@ def main(argv):
         tmp_file = open(tmp_filepath, 'w')
 
       for line in tickler:
-        # echo line without modification
+        sys.stdout.write(process_tickle(line))
         if args.echo:
+          # echo all lines without modification
           sys.stdout.write(line)
         if args.merge:
           tmp_file.write(line)
@@ -39,6 +41,48 @@ def main(argv):
         except WindowsError:
           pass # can't copy file acces time
         os.replace(tmp_filepath, filename)
+
+################################################################################
+
+regexes = {
+  'identity': re.compile(r'.*')
+  , 'is_tickle': 
+    re.compile(r"""
+        ^
+        (?P<indent> \s*)
+        [#]\s*tickle\s+
+        (
+          (?P<date_spec> .*?)
+          \s+
+        )?
+        say(?:ing)?\s*
+        (?P<message> .*)
+        $
+      """
+      , re.IGNORECASE | re.VERBOSE
+    )
+}
+
+def process_tickle(line):
+  # determine if line is a tickle
+  # if so, determine if the tickle matches today 
+  # if so, return a formated message
+  m = regexes['is_tickle'].match(line)
+  if m:
+    indent = m.group('indent')
+    date_spec = m.group('date_spec')
+    if date_spec: date_spec = date_spec.lower()
+    message = m.group('message')
+
+    if date_spec is None or date_spec == 'daily':
+      # tickle every day
+      return format_tickle(m.group('message'), m.group('indent'))
+  else:
+    return ''
+
+def format_tickle(message, indentation):
+  # return a formated tickle message, preserving original indentation
+  return indentation + message.strip() + "\n"
 
 ################################################################################
 
