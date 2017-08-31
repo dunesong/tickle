@@ -44,30 +44,26 @@ def main(argv):
 
 ################################################################################
 
-regexes = {
-  'identity': re.compile(r'.*')
-  , 'is_tickle': 
-    re.compile(r"""
-        ^
-        (?P<indent> \s*)
-        [#]\s*tickle\s+
-        (
-          (?P<date_spec> .*?)
-          \s+
-        )?
-        say(?:ing)?\s*
-        (?P<message> .*)
-        $
-      """
-      , re.IGNORECASE | re.VERBOSE
-    )
-}
+tickle_regex = re.compile(r"""
+    ^
+    (?P<indent> \s*)
+    [#]\s*tickle\s+
+    (
+      (?P<date_spec> .*?)
+      \s+
+    )?
+    say(?:ing)?\s*
+    (?P<message> .*)
+    $
+  """
+  , re.IGNORECASE | re.VERBOSE
+)
 
 def process_tickle(line):
   # determine if line is a tickle
   # if so, determine if the tickle matches today 
   # if so, return a formated message
-  m = regexes['is_tickle'].match(line)
+  m = tickle_regex.match(line)
   if m:
     indent = m.group('indent')
     date_spec = m.group('date_spec')
