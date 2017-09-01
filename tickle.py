@@ -10,6 +10,21 @@ from shutil import copystat
 class Tickler:
   """ tickler reminder system """
 
+  tickle_regex = re.compile(r"""
+      ^
+      (?P<indent> \s*)
+      [#]\s*tickle\s+
+      (
+        (?P<date_spec> .*?)
+        \s+
+      )?
+      say(?:ing)?\s*
+      (?P<message> .*)
+      $
+    """
+    , re.IGNORECASE | re.VERBOSE
+  )
+
   def __init__(self): pass
 
   def __call__(self, argv):
@@ -52,22 +67,7 @@ class Tickler:
         returns '' 
     """
 
-    tickle_regex = re.compile(r"""
-        ^
-        (?P<indent> \s*)
-        [#]\s*tickle\s+
-        (
-          (?P<date_spec> .*?)
-          \s+
-        )?
-        say(?:ing)?\s*
-        (?P<message> .*)
-        $
-      """
-      , re.IGNORECASE | re.VERBOSE
-    )
-
-    m = tickle_regex.match(line)
+    m = self.tickle_regex.match(line)
     if m:
       indent = m.group('indent')
       date_spec = m.group('date_spec')
