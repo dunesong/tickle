@@ -55,9 +55,9 @@ class Tickler:
           sys.stdout.write(line)
 
   def process_tickle(self, line):
-    """ determines if line is a tickle and if so, determine if the tickle matches 
-        the date, and if so, returns a formated message - otherwise, 
-        returns '' 
+    """ determines if line is a tickle and if so, determine if the tickle matches
+        the date, and if so, returns a formated message - otherwise,
+        returns ''
     """
 
     m = self.tickle_regex.match(line)
@@ -70,9 +70,14 @@ class Tickler:
     else:
       return ''
 
-  def add_date_test(self, match_test, appl_test):
-    """ add a date test """
-    self.date_tests.append((match_test, appl_test))
+  def add_date_test(self, match, test):
+    """ append a date test to the ordered list
+          match(date_spec):
+            returns True if the test function is appropriate for date_spec
+          test(date_spec):
+            returns True if date matches the date_spec
+    """
+    self.date_tests.append((match, test))
 
   def test_tickle_date(self, date_spec):
     """ return True if the date matches the date_spec, otherwise return False """
