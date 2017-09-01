@@ -3,6 +3,7 @@
 import sys
 import os
 import argparse
+import fileinput
 import re
 from tempfile import mkstemp
 from shutil import copystat
@@ -39,38 +40,19 @@ class Tickler:
     )
 
   def __call__(self, argv):
+    """ process tickler commands from files specified on the command line """
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--echo', action='store_true')
     parser.add_argument('-m', '--merge', action='store_true')
-    parser.add_argument('tickler_files', nargs='+')
+    parser.add_argument('ticklers', nargs='*')
     args = parser.parse_args()
 
-    for filename in args.tickler_files:
-      if os.access(filename, os.R_OK):
-        tickler = open(filename, 'r')
-        if args.merge:
-          tmp_fd, tmp_filepath = mkstemp(None, filename + '.', '.', True)
-          tmp_file = open(tmp_filepath, 'w')
-
-        for line in tickler:
-          sys.stdout.write(self.process_tickle(line))
-          if args.echo:
-            # echo all lines without modification
-            sys.stdout.write(line)
-          if args.merge:
-            tmp_file.write(line)
-
-        tickler.close()
-        if args.merge:
-          tmp_file.flush()
-          os.fsync(tmp_fd)
-          os.close(tmp_fd)
-          try:
-            copystat(filename, tmp_filepath)
-          except WindowsError:
-            pass # can't copy file acces time
-          os.replace(tmp_filepath, filename)
-
+    with fileinput.input(files = args.ticklers, inplace = args.merge) as files:
+      for line in files:
+        sys.stdout.write(self.process_tickle(line))
+        if args.echo or args.merge:
+          # echo all lines without modification
+          sys.stdout.write(line)
 
   def process_tickle(self, line):
     """ determines if line is a tickle and if so, determine if the tickle matches 
