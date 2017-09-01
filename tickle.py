@@ -10,26 +10,24 @@ from shutil import copystat
 class Tickler:
   """ tickler reminder system """
 
-  tickle_regex = re.compile(r"""
-      ^
-      (?P<indent> \s*)      # capture indentation
-      [#]\s*tickle\s+       # recognize the "# tickle" prefix
-      (                     #
-        (?P<date_spec> .*?) # capture date_spec
-        \s+                 #
-      )?                    #
-      say(?:ing)?\s*        # recognize "say(ing)"
-      (?P<message> .*)      # capture tickler message
-      $
-    """
-    , re.IGNORECASE | re.VERBOSE
-  )
-
-  date_tests = [ ]
-
-################################################################################
-
   def __init__(self):
+    self.tickle_regex = re.compile(r"""
+        ^
+        (?P<indent> \s*)      # capture indentation
+        [#]\s*tickle\s+       # recognize the "# tickle" prefix
+        (                     #
+          (?P<date_spec> .*?) # capture date_spec
+          \s+                 #
+        )?                    #
+        say(?:ing)?\s*        # recognize "say(ing)"
+        (?P<message> .*)      # capture tickler message
+        $
+      """
+      , re.IGNORECASE | re.VERBOSE
+    )
+
+    self.date_tests = [ ]
+
     self.add_date_test(
       lambda date_spec: re.match('daily', date_spec, re.IGNORECASE)
       , lambda date_spec: True # match every day
