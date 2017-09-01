@@ -82,7 +82,6 @@ class Tickler:
     if m:
       indent = m.group('indent')
       date_spec = m.group('date_spec')
-      if date_spec: date_spec = date_spec.lower().strip()
       message = m.group('message')
 
       if self.test_tickle_date(date_spec):
@@ -101,6 +100,8 @@ class Tickler:
     """ return True if the date matches the date_spec, otherwise return False """
     # date_test is a list of tuples:  [0] is the test for whether the test in [1]
     # should be applied to the date_spec parameter
+
+    if date_spec: date_spec = date_spec.lower().strip()
 
     for match, test in self.date_tests:
       if match(date_spec): return test(date_spec)
