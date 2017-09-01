@@ -29,6 +29,11 @@ class Tickler:
     self.date_tests = [ ]
 
     self.add_date_test(
+      lambda date_spec: date_spec is None
+      , lambda date_spec: True # match every day
+    )
+
+    self.add_date_test(
       lambda date_spec: re.match('daily', date_spec, re.IGNORECASE)
       , lambda date_spec: True # match every day
     )
@@ -77,11 +82,7 @@ class Tickler:
     if m:
       indent = m.group('indent')
       date_spec = m.group('date_spec')
-      if date_spec: 
-        date_spec = date_spec.lower().strip()
-      else:
-        # if no date specification, default to daily
-        date_spec = 'daily'
+      if date_spec: date_spec = date_spec.lower().strip()
       message = m.group('message')
 
       if self.test_tickle_date(date_spec):
