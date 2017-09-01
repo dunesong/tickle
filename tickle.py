@@ -25,7 +25,15 @@ class Tickler:
     , re.IGNORECASE | re.VERBOSE
   )
 
-  def __init__(self): pass
+  date_tests = [ ]
+
+################################################################################
+
+  def __init__(self):
+    self.add_date_test(
+      lambda date_spec: re.match('daily', date_spec, re.IGNORECASE)
+      , lambda date_spec: True # match every day
+    )
 
   def __call__(self, argv):
     parser = argparse.ArgumentParser()
@@ -86,26 +94,22 @@ class Tickler:
     else:
       return ''
 
+  def add_date_test(self, match_test, appl_test):
+    """ add a date test """
+    self.date_tests.append((match_test, appl_test))
+
   def test_tickle_date(self, date_spec):
     """ return True if the date matches the date_spec, otherwise return False """
     # date_test is a list of tuples:  [0] is the test for whether the test in [1]
     # should be applied to the date_spec parameter
-    date_tests = [ ]
 
-    date_tests.append(
-      (
-        lambda date_spec: re.match('daily', date_spec, re.IGNORECASE)
-        , lambda date_spec: True # match every day
-      )
-    )
-
-    for test in date_tests:
+    for test in self.date_tests:
       if test[0](date_spec): return test[1](date_spec)
 
     return False # failed to match any test
 
   def format_tickle(self, message, indentation):
-    """ return a formated tickle message, preserving original indentation """
+    """ return a formatted tickle message, preserving original indentation """
     return indentation + message.strip() + "\n"
 
 ################################################################################
