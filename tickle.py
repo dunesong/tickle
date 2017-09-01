@@ -39,10 +39,10 @@ class Tickler:
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--echo', action='store_true')
     parser.add_argument('-m', '--merge', action='store_true')
-    parser.add_argument('tickler_file', nargs='+')
+    parser.add_argument('tickler_files', nargs='+')
     args = parser.parse_args()
 
-    for filename in args.tickler_file:
+    for filename in args.tickler_files:
       if os.access(filename, os.R_OK):
         tickler = open(filename, 'r')
         if args.merge:
