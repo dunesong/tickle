@@ -44,43 +44,66 @@ def main(argv):
 
 ################################################################################
 
-tickle_regex = re.compile(r"""
-    ^
-    (?P<indent> \s*)
-    [#]\s*tickle\s+
-    (
-      (?P<date_spec> .*?)
-      \s+
-    )?
-    say(?:ing)?\s*
-    (?P<message> .*)
-    $
-  """
-  , re.IGNORECASE | re.VERBOSE
-)
-
 def process_tickle(line):
-  # determine if line is a tickle
-  # if so, determine if the tickle matches today 
-  # if so, return a formated message
+  """ determines if line is a tickle and if so, determine if the tickle matches 
+      the date, and if so, returns a formated message - otherwise, 
+      returns '' 
+  """
+
+  tickle_regex = re.compile(r"""
+      ^
+      (?P<indent> \s*)
+      [#]\s*tickle\s+
+      (
+        (?P<date_spec> .*?)
+        \s+
+      )?
+      say(?:ing)?\s*
+      (?P<message> .*)
+      $
+    """
+    , re.IGNORECASE | re.VERBOSE
+  )
+
   m = tickle_regex.match(line)
   if m:
     indent = m.group('indent')
     date_spec = m.group('date_spec')
     if date_spec: 
-      date_spec = date_spec.lower()
+      date_spec = date_spec.lower().strip()
     else:
       # if no date specification, default to daily
       date_spec = 'daily'
     message = m.group('message')
 
-    if date_spec == 'daily':
+    if test_tickle_date(date_spec):
       return format_tickle(m.group('message'), m.group('indent'))
+    else:
+      return ''
+
   else:
     return ''
 
+def test_tickle_date(date_spec):
+  """ return True if the date matches the date_spec, otherwise return False """
+  # date_test is a list of tuples:  [0] is the test for whether the test in [1]
+  # should be applied to the date_spec parameter
+  date_tests = [ ]
+
+  date_tests.append(
+    (
+      lambda date_spec: re.match('daily', date_spec, re.IGNORECASE)
+      , lambda date_spec: True # match every day
+    )
+  )
+
+  for test in date_tests:
+    if test[0](date_spec): return test[1](date_spec)
+
+  return False # failed to match any test
+
 def format_tickle(message, indentation):
-  # return a formated tickle message, preserving original indentation
+  """ return a formated tickle message, preserving original indentation """
   return indentation + message.strip() + "\n"
 
 ################################################################################
