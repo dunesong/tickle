@@ -80,11 +80,7 @@ class Tickler:
 
     m = self.tickle_regex.match(line)
     if m:
-      indent = m.group('indent')
-      date_spec = m.group('date_spec')
-      message = m.group('message')
-
-      if self.test_tickle_date(date_spec):
+      if self.test_tickle_date(m.group('date_spec')):
         return self.format_tickle(m.group('message'), m.group('indent'))
       else:
         return ''
