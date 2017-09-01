@@ -12,14 +12,14 @@ class Tickler:
 
   tickle_regex = re.compile(r"""
       ^
-      (?P<indent> \s*)
-      [#]\s*tickle\s+
-      (
-        (?P<date_spec> .*?)
-        \s+
-      )?
-      say(?:ing)?\s*
-      (?P<message> .*)
+      (?P<indent> \s*)      # capture indentation
+      [#]\s*tickle\s+       # recognize the "# tickle" prefix
+      (                     #
+        (?P<date_spec> .*?) # capture date_spec
+        \s+                 #
+      )?                    #
+      say(?:ing)?\s*        # recognize "say(ing)"
+      (?P<message> .*)      # capture tickler message
       $
     """
     , re.IGNORECASE | re.VERBOSE
