@@ -103,8 +103,8 @@ class Tickler:
     # date_test is a list of tuples:  [0] is the test for whether the test in [1]
     # should be applied to the date_spec parameter
 
-    for test in self.date_tests:
-      if test[0](date_spec): return test[1](date_spec)
+    for match, test in self.date_tests:
+      if match(date_spec): return test(date_spec)
 
     return False # failed to match any test
 
