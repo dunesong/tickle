@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-import os
+from logging import warning
 import argparse
 import fileinput
 import re
@@ -87,7 +87,8 @@ class Tickler:
     for match, test in self.date_tests:
       if match(date_spec): return test(date_spec)
 
-    return False # failed to match any test
+    warning("unmatched date_spec '%s'" % date_spec)
+    return False
 
   def format_tickle(self, message, indentation):
     """ return a formatted tickle message, preserving original indentation """
