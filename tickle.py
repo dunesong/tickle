@@ -5,8 +5,6 @@ import os
 import argparse
 import fileinput
 import re
-from tempfile import mkstemp
-from shutil import copystat
 
 class Tickler:
   """ tickler reminder system """
