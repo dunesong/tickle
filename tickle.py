@@ -5,6 +5,7 @@ from logging import warning
 import argparse
 import fileinput
 import re
+from datetime import date
 
 class Tickler:
   """ tickler reminder system """
@@ -96,7 +97,65 @@ class Tickler:
 
 ################################################################################
 
+class TicklerDate:
+  def __init__(self, day = None):
+    self.date_format_tests = []
+    self.date_format_tests.append(read_iso_date)
+
+    self.date = self.read_date(day)
+    assert self.date, "TicklerDate.date failed to initialize"
+
+  def __str__(self): return str(self.date)
+
+  def read_date(self, day = None):
+    if not day:
+      return date.today()
+    else:
+      d = str(day).strip()
+
+      for test in self.date_format_tests:
+        success, date_string = test(d)
+        if success: return date_string
+
+      warning("unrecognized date '%s'" % d)
+      return date.today()
+
+### date conversion utilities
+
+def read_iso_date(day):
+  """ is date in an ISO-8601-like date format """
+  m = re.match(r'^(\d{1,4})-(\d{1,2})-(\d{1,2})$', day)
+  if m:
+    d = get_iso_date(m.group(1), m.group(2), m.group(3))
+
+    if d: return True, d
+    else: return False, None
+  else: return False, None
+
+def get_iso_date(year, month, day):
+  """ return a date object """
+  try:
+    y, m, d = int(year), int(month), int(day)
+  except ValueError:
+    # this is the programmer's fault
+    raise
+
+  try:
+    d = date(y, m, d)
+  except ValueError as e:
+    warning("invalid date: %s" % e)
+    return None
+  else:
+    return d
+
+################################################################################
+
 if __name__ == '__main__':
   Tickler()(sys.argv[1:])
+  #print(read_iso_date('199-2-15')[1])
+  #print(get_iso_date('1000', '02', '01'))
+
+  #td = TicklerDate('199-2-15')
+  #print(td)
 
 # vim: set sw=2 ts=2:
