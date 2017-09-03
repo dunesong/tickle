@@ -39,6 +39,10 @@ class Tickler:
     ))
 
   def __call__(self, argv):
+    self.process_tickler_files(argv)
+
+
+  def process_tickler_files(self, argv):
     """ process tickler commands from files specified on the command line """
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--echo', action='store_true')
