@@ -57,7 +57,6 @@ class Tickler:
         the date, and if so, returns a formated message - otherwise,
         returns ''
     """
-
     m = self.tickle_regex.match(line)
     if m:
       if self.test_tickle_date(m.group('date_spec'), tickle_date):
@@ -158,10 +157,5 @@ class TicklerDate:
 
 if __name__ == '__main__':
   Tickler()(sys.argv[1:])
-  #print(read_iso_date('199-2-15')[1])
-  #print(get_iso_date('1000', '02', '01'))
-
-  #td = TicklerDate('199-2-15')
-  #print(td)
 
 # vim: set sw=2 ts=2:
