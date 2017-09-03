@@ -27,20 +27,11 @@ class Tickler:
     )
 
     self.date_tests = [ ]
-
-    self.date_tests.append((
-      lambda date_spec: date_spec is None
-      , lambda date_spec: True # match every day
-    ))
-
-    self.date_tests.append((
-      lambda date_spec: re.match('daily', date_spec, re.IGNORECASE)
-      , lambda date_spec: True # match every day
-    ))
+    self.date_tests.append(self.test_date_spec_none)
+    self.date_tests.append(self.test_date_spec_daily)
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
-
 
   def process_tickler_files(self, argv):
     """ process tickler commands from files specified on the command line """
@@ -75,16 +66,24 @@ class Tickler:
 
   def test_tickle_date(self, date_spec):
     """ return True if the date matches the date_spec, otherwise return False """
-    # date_test is a list of tuples:  [0] is the test for whether the test in [1]
-    # should be applied to the date_spec parameter
-
     if date_spec: date_spec = date_spec.lower().strip()
 
-    for match, test in self.date_tests:
-      if match(date_spec): return test(date_spec)
+    for date_test in self.date_tests:
+      # match = True means date_spec matchs a recognized format
+      # test  = True means date_spec matchs the date
+      match, test = date_test(date_spec)
+      if match: return test
 
     warning("unmatched date_spec '%s'" % date_spec)
     return False
+
+  def test_date_spec_none(self, date_spec):
+    if date_spec is None: return True, True
+    else: return False, False
+
+  def test_date_spec_daily(self, date_spec):
+    if re.match('daily', date_spec, re.IGNORECASE): return True, True
+    else: return False, False
 
   def format_tickle(self, message, indentation):
     """ return a formatted tickle message, preserving original indentation """
