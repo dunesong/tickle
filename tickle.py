@@ -29,6 +29,7 @@ class Tickler:
     self.date_tests = [ ]
     self.date_tests.append(self.test_date_spec_none)
     self.date_tests.append(self.test_date_spec_daily)
+    self.date_tests.append(self.test_date_spec_on_date)
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -82,7 +83,12 @@ class Tickler:
     else: return False, False
 
   def test_date_spec_daily(self, date_spec):
-    if re.match('daily', date_spec, re.IGNORECASE): return True, True
+    if re.match(r'daily', date_spec, re.IGNORECASE): return True, True
+    else: return False, False
+
+  def test_date_spec_on_date(self, date_spec):
+    m = re.match(r'on\s+(.*)', date_spec, re.IGNORECASE)
+    if m: return True, read_date(m.group(1)) == date.today()
     else: return False, False
 
   def format_tickle(self, message, indentation):
