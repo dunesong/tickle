@@ -43,7 +43,7 @@ class Tickler:
     parser.add_argument('ticklers', nargs='*')
     args = parser.parse_args()
 
-    td = read_date(args.date)
+    td = TicklerDate(args.date)
 
     with fileinput.input(files = args.ticklers, inplace = args.merge) as files:
       for line in files:
@@ -71,13 +71,13 @@ class Tickler:
   def test_tickle_date(self, date_spec, tickle_date):
     """ return True if the date matches the date_spec, otherwise return False """
     ds = date_spec.lower().strip() if date_spec else None
-    td = tickle_date if tickle_date else date.today()
-    assert isinstance(td, date), "tickle_date argument must be a date object"
+    assert isinstance(tickle_date, TicklerDate) \
+      , "tickle_date argument must be a TicklerDate object"
 
     for date_test in self.date_tests:
       # match == True means date_spec matchs a recognized format
       # test  == True means date_spec matchs the date
-      match, test = date_test(ds, td)
+      match, test = date_test(ds, tickle_date)
       if match: return test
 
     warning("unmatched date_spec '%s'" % ds)
@@ -93,7 +93,7 @@ class Tickler:
 
   def test_date_spec_on_date(self, date_spec, tickle_date):
     m = re.match(r'on\s+(.*)', date_spec, re.IGNORECASE)
-    if m: return True, read_date(m.group(1)) == tickle_date
+    if m: return True, TicklerDate(m.group(1)) == tickle_date
     else: return False, False
 
   def format_tickle(self, message, indentation):
@@ -147,6 +147,12 @@ class TicklerDate:
     assert self.date, "TicklerDate.date failed to initialize"
 
   def __str__(self): return str(self.date)
+
+  def __eq__(self, other):
+    if isinstance(other, self.__class__):
+      return self.date == other.date
+    else:
+      return False
 
 ################################################################################
 
