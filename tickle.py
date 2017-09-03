@@ -39,17 +39,20 @@ class Tickler:
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--echo', action='store_true')
     parser.add_argument('-m', '--merge', action='store_true')
+    parser.add_argument('-d', '--date')
     parser.add_argument('ticklers', nargs='*')
     args = parser.parse_args()
 
+    td = read_date(args.date)
+
     with fileinput.input(files = args.ticklers, inplace = args.merge) as files:
       for line in files:
-        sys.stdout.write(self.process_tickle(line))
+        sys.stdout.write(self.process_tickle(line, td))
         if args.echo or args.merge:
           # echo all lines without modification
           sys.stdout.write(line)
 
-  def process_tickle(self, line):
+  def process_tickle(self, line, tickle_date = None):
     """ determines if line is a tickle and if so, determine if the tickle matches
         the date, and if so, returns a formated message - otherwise,
         returns ''
@@ -57,7 +60,7 @@ class Tickler:
 
     m = self.tickle_regex.match(line)
     if m:
-      if self.test_tickle_date(m.group('date_spec')):
+      if self.test_tickle_date(m.group('date_spec'), tickle_date):
         return self.format_tickle(m.group('message'), m.group('indent'))
       else:
         return ''
@@ -65,30 +68,32 @@ class Tickler:
     else:
       return ''
 
-  def test_tickle_date(self, date_spec):
+  def test_tickle_date(self, date_spec, tickle_date):
     """ return True if the date matches the date_spec, otherwise return False """
-    if date_spec: date_spec = date_spec.lower().strip()
+    ds = date_spec.lower().strip() if date_spec else None
+    td = tickle_date if tickle_date else date.today()
+    assert isinstance(td, date), "tickle_date argument must be a date object"
 
     for date_test in self.date_tests:
-      # match = True means date_spec matchs a recognized format
-      # test  = True means date_spec matchs the date
-      match, test = date_test(date_spec)
+      # match == True means date_spec matchs a recognized format
+      # test  == True means date_spec matchs the date
+      match, test = date_test(ds, td)
       if match: return test
 
-    warning("unmatched date_spec '%s'" % date_spec)
+    warning("unmatched date_spec '%s'" % ds)
     return False
 
-  def test_date_spec_none(self, date_spec):
+  def test_date_spec_none(self, date_spec, tickle_date):
     if date_spec is None: return True, True
     else: return False, False
 
-  def test_date_spec_daily(self, date_spec):
+  def test_date_spec_daily(self, date_spec, tickle_date):
     if re.match(r'daily', date_spec, re.IGNORECASE): return True, True
     else: return False, False
 
-  def test_date_spec_on_date(self, date_spec):
+  def test_date_spec_on_date(self, date_spec, tickle_date):
     m = re.match(r'on\s+(.*)', date_spec, re.IGNORECASE)
-    if m: return True, read_date(m.group(1)) == date.today()
+    if m: return True, read_date(m.group(1)) == tickle_date
     else: return False, False
 
   def format_tickle(self, message, indentation):
