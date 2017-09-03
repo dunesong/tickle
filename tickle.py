@@ -28,15 +28,15 @@ class Tickler:
 
     self.date_tests = [ ]
 
-    self.add_date_test(
+    self.date_tests.append((
       lambda date_spec: date_spec is None
       , lambda date_spec: True # match every day
-    )
+    ))
 
-    self.add_date_test(
+    self.date_tests.append((
       lambda date_spec: re.match('daily', date_spec, re.IGNORECASE)
       , lambda date_spec: True # match every day
-    )
+    ))
 
   def __call__(self, argv):
     """ process tickler commands from files specified on the command line """
@@ -68,15 +68,6 @@ class Tickler:
 
     else:
       return ''
-
-  def add_date_test(self, match, test):
-    """ append a date test to the ordered list
-          match(date_spec):
-            returns True if the test function is appropriate for date_spec
-          test(date_spec):
-            returns True if date matches the date_spec
-    """
-    self.date_tests.append((match, test))
 
   def test_tickle_date(self, date_spec):
     """ return True if the date matches the date_spec, otherwise return False """
@@ -146,11 +137,11 @@ class TicklerDate:
 ################################################################################
 
 if __name__ == '__main__':
-  #Tickler()(sys.argv[1:])
+  Tickler()(sys.argv[1:])
   #print(read_iso_date('199-2-15')[1])
   #print(get_iso_date('1000', '02', '01'))
 
-  td = TicklerDate('199-2-15')
-  print(td)
+  #td = TicklerDate('199-2-15')
+  #print(td)
 
 # vim: set sw=2 ts=2:
