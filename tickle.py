@@ -98,12 +98,8 @@ class Tickler:
 ################################################################################
 
 def get_iso_date(year, month, day):
-  """ return a date object """
-  try:
-    y, m, d = int(year), int(month), int(day)
-  except ValueError:
-    # this is the programmer's fault
-    raise
+  """ wrapper to handle exceptions when creating a datetime.date object """
+  y, m, d = int(year), int(month), int(day)
 
   try:
     d = date(y, m, d)
