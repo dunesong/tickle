@@ -135,12 +135,19 @@ def read_tomorrow(day):
     return True, date.today() + timedelta(days=1)
   else: return False, None
 
+def read_overmorrow(day):
+  """ is date 'overtomorrow' """
+  if 'overmorrow' == day.lower():
+    return True, date.today() + timedelta(days=2)
+  else: return False, None
+
 def read_date(day = None):
   """ reads a date in multiple formats, returns a datetime.date object """
   date_format_tests = []
   date_format_tests.append(read_iso_date)
   date_format_tests.append(read_today)
   date_format_tests.append(read_tomorrow)
+  date_format_tests.append(read_overmorrow)
 
   if not day:
     return date.today()
