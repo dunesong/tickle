@@ -5,7 +5,7 @@ from logging import warning
 import argparse
 import fileinput
 import re
-from datetime import date
+from datetime import date, timedelta
 
 class Tickler:
   """ tickler reminder system """
@@ -123,10 +123,24 @@ def read_iso_date(day):
     else: return False, None
   else: return False, None
 
+def read_today(day):
+  """ is date 'today' """
+  if 'today' == day.lower():
+    return True, date.today()
+  else: return False, None
+
+def read_tomorrow(day):
+  """ is date 'tomorrow' """
+  if 'tomorrow' == day.lower():
+    return True, date.today() + timedelta(days=1)
+  else: return False, None
+
 def read_date(day = None):
   """ reads a date in multiple formats, returns a datetime.date object """
   date_format_tests = []
   date_format_tests.append(read_iso_date)
+  date_format_tests.append(read_today)
+  date_format_tests.append(read_tomorrow)
 
   if not day:
     return date.today()
