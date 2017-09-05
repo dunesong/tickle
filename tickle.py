@@ -147,6 +147,12 @@ def read_yesterday(day):
     return True, date.today() + timedelta(days = -1)
   else: return False, None
 
+def read_ereyesterday(day):
+  """ is date 'ereyesterday' """
+  if 'ereyesterday' == day.lower():
+    return True, date.today() + timedelta(days = -2)
+  else: return False, None
+
 def read_date(day = None):
   """ reads a date in multiple formats, returns a datetime.date object """
   date_format_tests = []
@@ -155,6 +161,7 @@ def read_date(day = None):
   date_format_tests.append(read_tomorrow)
   date_format_tests.append(read_overmorrow)
   date_format_tests.append(read_yesterday)
+  date_format_tests.append(read_ereyesterday)
 
   if not day:
     return date.today()
