@@ -132,13 +132,19 @@ def read_today(day):
 def read_tomorrow(day):
   """ is date 'tomorrow' """
   if 'tomorrow' == day.lower():
-    return True, date.today() + timedelta(days=1)
+    return True, date.today() + timedelta(days = 1)
   else: return False, None
 
 def read_overmorrow(day):
   """ is date 'overtomorrow' """
   if 'overmorrow' == day.lower():
-    return True, date.today() + timedelta(days=2)
+    return True, date.today() + timedelta(days = 2)
+  else: return False, None
+
+def read_yesterday(day):
+  """ is date 'yesterday' """
+  if 'yesterday' == day.lower():
+    return True, date.today() + timedelta(days = -1)
   else: return False, None
 
 def read_date(day = None):
@@ -148,6 +154,7 @@ def read_date(day = None):
   date_format_tests.append(read_today)
   date_format_tests.append(read_tomorrow)
   date_format_tests.append(read_overmorrow)
+  date_format_tests.append(read_yesterday)
 
   if not day:
     return date.today()
