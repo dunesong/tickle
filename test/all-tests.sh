@@ -15,7 +15,7 @@ done
 
 echo ''
 if (( "$failure_count" > 0 )) ; then
-  echo "$failure_count/$test_count tests failed"
+  echo "$failure_count/$test_count tests FAILED"
 else
   echo "$test_count tests passed"
 fi
