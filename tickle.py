@@ -136,7 +136,7 @@ def read_tomorrow(day):
   else: return False, None
 
 def read_overmorrow(day):
-  """ is date 'overtomorrow' """
+  """ is date 'overmorrow' """
   if 'overmorrow' == day.lower():
     return True, date.today() + timedelta(days = 2)
   else: return False, None
