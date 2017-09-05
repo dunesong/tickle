@@ -3,7 +3,7 @@
 declare -i test_count=0
 declare -i failure_count=0
 
-for i in test.*.sh; do
+for i in `ls test.*.sh | sort -n -t . -k 2`; do
   "./$i"
   test_status=$?
 
