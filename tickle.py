@@ -30,6 +30,7 @@ class Tickler:
     self.date_tests.append(self.test_date_spec_none)
     self.date_tests.append(self.test_date_spec_daily)
     self.date_tests.append(self.test_date_spec_on_date)
+    self.date_tests.append(self.test_date_spec_weekly)
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -93,6 +94,15 @@ class Tickler:
   def test_date_spec_on_date(self, date_spec, tickle_date):
     m = re.match(r'on\s+(.*)', date_spec, re.IGNORECASE)
     if m: return True, TicklerDate(m.group(1)) == tickle_date
+    else: return False, False
+
+  def test_date_spec_weekly(self, date_spec, tickle_date):
+    m = re.match(r'^weekly\s+(.*)$', date_spec, re.IGNORECASE)
+    if m: 
+      for weekday in re.split(r'\W+', m.group(1)):
+        if tickle_date.is_weekday(weekday):
+          return True, True
+      return True, False
     else: return False, False
 
   def format_tickle(self, message, indentation):
@@ -180,12 +190,49 @@ class TicklerDate:
     self.date = read_date(day)
     assert self.date, "TicklerDate.date failed to initialize"
 
+    self.weekday_names = {
+      'monday':      0
+      , 'mon':       0
+      , 'm':         0
+      , 'tuesday':   1
+      , 'tue':       1
+      , 'tues':      1
+      , 't':         1
+      , 'wednesday': 2
+      , 'wed':       2
+      , 'wednes':    2
+      , 'w':         2
+      , 'thursday':  3
+      , 'thu':       3
+      , 'thur':      3
+      , 'thurs':     3
+      , 'th':        3
+      , 'r':         3
+      , 'friday':    4
+      , 'fri':       4
+      , 'f':         4
+      , 'saturday':  5
+      , 'sat':       5
+      , 's':         5
+      , 'sunday':    6
+      , 'sun':       6
+      , 'u':         6
+    }
+
+
   def __str__(self): return str(self.date)
 
   def __eq__(self, other):
     if isinstance(other, self.__class__):
       return self.date == other.date
     else:
+      return False
+
+  def is_weekday(self, weekday):
+    if weekday in self.weekday_names:
+      return self.date.weekday() == self.weekday_names[weekday]
+    else: 
+      warning("unrecognized weekday name '%s'" % weekday)
       return False
 
 ################################################################################
