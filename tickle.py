@@ -38,6 +38,7 @@ class Tickler:
 
   def process_tickler_files(self, argv):
     """ process tickler commands from files specified on the command line """
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', '--echo', action='store_true')
     parser.add_argument('-m', '--merge', action='store_true')
@@ -59,6 +60,7 @@ class Tickler:
         the date, and if so, returns a formated message - otherwise,
         returns ''
     """
+
     m = self.tickle_regex.match(line)
     if m:
       if self.test_tickle_date(m.group('date_spec'), tickle_date):
@@ -71,6 +73,7 @@ class Tickler:
 
   def test_tickle_date(self, date_spec, tickle_date):
     """ return True if the date matches the date_spec, otherwise return False """
+
     ds = date_spec.lower().strip() if date_spec else None
     assert isinstance(tickle_date, TicklerDate) \
       , "tickle_date argument must be a TicklerDate object"
@@ -117,12 +120,14 @@ class Tickler:
 
   def format_tickle(self, message, indentation):
     """ return a formatted tickle message, preserving original indentation """
+
     return indentation + message.strip() + "\n"
 
 ################################################################################
 
 def get_iso_date(year, month, day):
   """ wrapper to handle exceptions when creating a datetime.date object """
+
   y, m, d = int(year), int(month), int(day)
 
   try:
@@ -135,6 +140,7 @@ def get_iso_date(year, month, day):
 
 def read_iso_date(day):
   """ is date in an ISO-8601-like date format """
+
   m = re.match(r'^(\d{1,4})-(\d{1,2})-(\d{1,2})$', day)
   if m:
     d = get_iso_date(m.group(1), m.group(2), m.group(3))
@@ -145,36 +151,42 @@ def read_iso_date(day):
 
 def read_today(day):
   """ is date 'today' """
+
   if 'today' == day.lower():
     return True, date.today()
   else: return False, None
 
 def read_tomorrow(day):
   """ is date 'tomorrow' """
+
   if 'tomorrow' == day.lower():
     return True, date.today() + timedelta(days = 1)
   else: return False, None
 
 def read_overmorrow(day):
   """ is date 'overmorrow' """
+
   if 'overmorrow' == day.lower():
     return True, date.today() + timedelta(days = 2)
   else: return False, None
 
 def read_yesterday(day):
   """ is date 'yesterday' """
+
   if 'yesterday' == day.lower():
     return True, date.today() + timedelta(days = -1)
   else: return False, None
 
 def read_ereyesterday(day):
   """ is date 'ereyesterday' """
+
   if 'ereyesterday' == day.lower():
     return True, date.today() + timedelta(days = -2)
   else: return False, None
 
 def read_date(day = None):
   """ reads a date in multiple formats, returns a datetime.date object """
+
   date_format_tests = []
   date_format_tests.append(read_iso_date)
   date_format_tests.append(read_today)
@@ -263,6 +275,8 @@ class TicklerDate:
       return False
 
   def is_weekday(self, weekday):
+    """ return True if self.date is the day of the week in weekday """
+
     if weekday in self.weekday_names:
       return self.date.weekday() == self.weekday_names[weekday]
     else: 
@@ -270,6 +284,13 @@ class TicklerDate:
       return False
 
   def is_monthday(self, monthday):
+    """ return True if self.date is the day of the monht in monthday
+
+        examples:
+          10, 25  # on the tenth and twenty-fifth day of the month
+          1st wed # on the first Wednesday of the month
+    """
+
     simple_monthday = re.match(r'^[0-9]+$', monthday)
     if simple_monthday:
       return self.date.day == int(monthday)
@@ -294,6 +315,8 @@ class TicklerDate:
     return False
 
   def is_leap_year(self):
+    """ return True if self.date is in a leap year """
+
     if date.year % 4 == 0 and date.year %100 != 0:
       return True
     elif date.year % 400 == 0:
