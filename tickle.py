@@ -195,6 +195,30 @@ def read_date(day = None):
     warning("unrecognized date '%s'" % d)
     return date.today()
 
+def ordinal_to_int(ordinal):
+  ordinals = {
+    'zeroth':      0
+    , 'first':     1
+    , 'second':    2
+    , 'third':     3
+    , 'fourth':    4
+    , 'fifth':     5
+    , 'sixth':     6
+    , 'seventh':   7
+    , 'eighth':    8
+    , 'ninth':     9
+    , 'tenth':    10
+    , 'eleventh': 11
+    , 'twelfth':  12
+  }
+  numeric_ordinal = re.match(r"^([0-9]+)", ordinal)
+  if numeric_ordinal:
+    return int(numeric_ordinal.group(1))
+  elif ordinal in ordinals:
+    return ordinals[ordinal]
+  else:
+    return None
+    
 class TicklerDate:
   def __init__(self, day = None):
     self.date = read_date(day)
@@ -246,12 +270,28 @@ class TicklerDate:
       return False
 
   def is_monthday(self, monthday):
-    if monthday.isdecimal(): # positive integer
-      md = int(monthday)
-      return self.date.day == md
-    else: 
-      warning("unrecognized day of month '%s'" % monthday)
-      return False
+    simple_monthday = re.match(r'^[0-9]+$', monthday)
+    if simple_monthday:
+      return self.date.day == int(monthday)
+
+    ordinal_monthday = re.match(
+      r"""
+        ^
+        (?P<ord> [1-5]|1st|first|2nd|second|3rd|third|4th|fourth|5th|fifth)
+        \s+
+        (?P<weekday> %s)
+        $
+      """ % '|'.join(self.weekday_names.keys())
+      , monthday
+      , re.IGNORECASE | re.VERBOSE
+    )
+    if ordinal_monthday:
+      ordinal = ordinal_to_int(ordinal_monthday.group('ord'))
+      return self.is_weekday(ordinal_monthday.group('weekday')) \
+        and 7 * (ordinal - 1) < self.date.day <= (7 * ordinal)
+
+    warning("unrecognized day of month '%s'" % monthday)
+    return False
 
   def is_leap_year(self):
     if date.year % 4 == 0 and date.year %100 != 0:
