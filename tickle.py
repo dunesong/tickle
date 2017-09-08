@@ -230,8 +230,7 @@ class TicklerDate:
 
   def is_weekday(self, weekday):
     if weekday in self.weekday_names:
-      if self.date.weekday() == self.weekday_names[weekday]: return True
-      else: return False
+      return self.date.weekday() == self.weekday_names[weekday]
     else: 
       warning("unrecognized weekday name '%s'" % weekday)
       return False
