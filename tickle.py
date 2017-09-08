@@ -31,6 +31,7 @@ class Tickler:
     self.date_tests.append(self.test_date_spec_daily)
     self.date_tests.append(self.test_date_spec_on_date)
     self.date_tests.append(self.test_date_spec_weekly)
+    self.date_tests.append(self.test_date_spec_monthly)
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -101,6 +102,15 @@ class Tickler:
     if m: 
       for weekday in re.split(r'\W+', m.group(1)):
         if tickle_date.is_weekday(weekday):
+          return True, True
+      return True, False
+    else: return False, False
+
+  def test_date_spec_monthly(self, date_spec, tickle_date):
+    m = re.match(r'^monthly\s+(.*)$', date_spec, re.IGNORECASE)
+    if m: 
+      for day_of_month in re.split(r'\s*,\s*', m.group(1)):
+        if tickle_date.is_monthday(day_of_month):
           return True, True
       return True, False
     else: return False, False
@@ -233,6 +243,22 @@ class TicklerDate:
       return self.date.weekday() == self.weekday_names[weekday]
     else: 
       warning("unrecognized weekday name '%s'" % weekday)
+      return False
+
+  def is_monthday(self, monthday):
+    if monthday.isdecimal(): # positive integer
+      md = int(monthday)
+      return self.date.day == md
+    else: 
+      warning("unrecognized day of month '%s'" % monthday)
+      return False
+
+  def is_leap_year(self):
+    if date.year % 4 == 0 and date.year %100 != 0:
+      return True
+    elif date.year % 400 == 0:
+      return True
+    else:
       return False
 
 ################################################################################
