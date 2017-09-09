@@ -32,6 +32,7 @@ class Tickler:
     self.date_tests.append(self.test_date_spec_on_date)
     self.date_tests.append(self.test_date_spec_weekly)
     self.date_tests.append(self.test_date_spec_monthly)
+    self.date_tests.append(self.test_date_spec_yearly)
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -114,6 +115,15 @@ class Tickler:
     if m: 
       for day_of_month in re.split(r'\s*,\s*', m.group(1)):
         if tickle_date.is_monthday(day_of_month):
+          return True, True
+      return True, False
+    else: return False, False
+
+  def test_date_spec_yearly(self, date_spec, tickle_date):
+    m = re.match(r'^yearly\s+(.*)$', date_spec, re.IGNORECASE)
+    if m:
+      for day_of_year in re.split(r'\s*,\s*', m.group(1)):
+        if tickle_date.is_yearday(day_of_year):
           return True, True
       return True, False
     else: return False, False
@@ -284,7 +294,7 @@ class TicklerDate:
       return False
 
   def is_monthday(self, monthday):
-    """ return True if self.date is the day of the monht in monthday
+    """ return True if self.date is the day of the month specified in monthday
 
         examples:
           10, 25  # on the tenth and twenty-fifth day of the month
@@ -372,6 +382,21 @@ class TicklerDate:
       return True
     else:
       return False
+
+  def is_yearday(self, yearday):
+    """ return True if self.date is the day of the year specified in yearday
+
+        examples:
+          100, 250 # on the 100th and 250th days of the year
+    """
+
+    simple_yearday = re.match(r'^[0-9]+$', yearday)
+    if simple_yearday:
+      yd = (self.date - date(self.date.year, 1, 1)).days + 1
+
+      return yd == int(yearday)
+
+    return False
 
 ################################################################################
 
