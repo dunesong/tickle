@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TEST="test 19: should be able to tickle yearly based simple yearday" 
+TEST="test 19: should be able to tickle yearly based on a simple yearday" 
 
 results=$(../tickle.py --date '1970-01-01' 2>&1 <<'EOF'
 # tickle yearly 1 say Success
