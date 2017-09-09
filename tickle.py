@@ -298,8 +298,14 @@ class TicklerDate:
     ordinal_monthday = re.match(
       r"""
         ^
-        (?P<ord> [1-5]|1st|first|2nd|second|3rd|third|4th|fourth|5th|fifth)
-        \s+
+        (?:
+          (?P<ord> [1-5]|1st|first|2nd|second|3rd|third|4th|fourth|5th|fifth)
+          \s+
+        )?
+        (?:
+          (?P<last> last)
+          \s+
+        )?
         (?P<weekday> %s)
         $
       """ % '|'.join(self.weekday_names.keys())
@@ -307,12 +313,32 @@ class TicklerDate:
       , re.IGNORECASE | re.VERBOSE
     )
     if ordinal_monthday:
-      ordinal = ordinal_to_int(ordinal_monthday.group('ord'))
-      return self.is_weekday(ordinal_monthday.group('weekday')) \
-        and 7 * (ordinal - 1) < self.date.day <= (7 * ordinal)
+      if ordinal_monthday.group('ord'):
+        ordinal = ordinal_to_int(ordinal_monthday.group('ord'))
+      else:
+        ordinal = 1
+
+      if not self.is_weekday(ordinal_monthday.group('weekday')):
+        return False
+
+      if ordinal_monthday.group('last'):
+        mx = self.max_monthday()
+        return mx - (7 * ordinal) < self.date.day <= mx - (7 * (ordinal - 1))
+      else:
+        return 7 * (ordinal - 1) < self.date.day <= (7 * ordinal)
 
     warning("unrecognized day of month '%s'" % monthday)
     return False
+
+  def max_monthday(self):
+    """ return the maximum day of the month """
+    m = self.date.month + 1
+    y = self.date.year
+    if m == 13:
+      m = 1
+      y += 1
+    last_day_of_month = date(y, m, 1) + timedelta(days = -1)
+    return last_day_of_month.day
 
   def is_leap_year(self):
     """ return True if self.date is in a leap year """
