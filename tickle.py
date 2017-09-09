@@ -289,6 +289,8 @@ class TicklerDate:
         examples:
           10, 25  # on the tenth and twenty-fifth day of the month
           1st wed # on the first Wednesday of the month
+          last day # on the last day of the month
+          2 days before last day # two days before the last day of the month
     """
 
     simple_monthday = re.match(r'^[0-9]+$', monthday)
@@ -313,10 +315,9 @@ class TicklerDate:
       , re.IGNORECASE | re.VERBOSE
     )
     if ordinal_monthday:
+      ordinal = 1
       if ordinal_monthday.group('ord'):
         ordinal = ordinal_to_int(ordinal_monthday.group('ord'))
-      else:
-        ordinal = 1
 
       if not self.is_weekday(ordinal_monthday.group('weekday')):
         return False
@@ -326,6 +327,28 @@ class TicklerDate:
         return mx - (7 * ordinal) < self.date.day <= mx - (7 * (ordinal - 1))
       else:
         return 7 * (ordinal - 1) < self.date.day <= (7 * ordinal)
+
+    before_last_day = re.match(
+      r"""
+        ^
+        (?:
+          (?P<days_before> [0-9]+)
+          \s*d(?:ay(?:s)?)?
+          \s+before
+          \s+
+        )?
+        last\s+day
+        $
+      """
+      , monthday
+      , re.IGNORECASE | re.VERBOSE
+    )
+    if before_last_day:
+      days_before = 0
+      if before_last_day.group('days_before'):
+        days_before = int(before_last_day.group('days_before'))
+
+      return self.date.day == self.max_monthday() - days_before
 
     warning("unrecognized day of month '%s'" % monthday)
     return False
