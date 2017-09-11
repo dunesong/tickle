@@ -434,10 +434,23 @@ class TicklerDate:
       , yearday
       , re.IGNORECASE | re.VERBOSE
     )
-    if month_day:
+    day_month = re.match(
+      r"""
+        ^
+        (?P<day_of_month> [0-9]+)
+        (?:st|nd|rd|th)?
+        \s+
+        (?P<month_name> %s)
+        $
+      """ % '|'.join(self.month_names.keys())
+      , yearday
+      , re.IGNORECASE | re.VERBOSE
+    )
+    if month_day or day_month:
+      mo = month_day if month_day else day_month
       y = self.date.year
-      m = self.month_names[month_day.group('month_name').lower()]
-      d = int(month_day.group('day_of_month'))
+      m = self.month_names[mo.group('month_name').lower()]
+      d = int(mo.group('day_of_month'))
 
       if m == 2 and d == 29 and not self.is_leap_year():
         return False
