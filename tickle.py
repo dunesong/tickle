@@ -32,6 +32,7 @@ class Tickler:
     self.date_tests.append(self.test_date_spec_on_date)
     self.date_tests.append(self.test_date_spec_weekly)
     self.date_tests.append(self.test_date_spec_monthly)
+    self.date_tests.append(self.test_date_spec_yearly)
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -102,7 +103,7 @@ class Tickler:
 
   def test_date_spec_weekly(self, date_spec, tickle_date):
     m = re.match(r'^weekly\s+(.*)$', date_spec, re.IGNORECASE)
-    if m: 
+    if m:
       for weekday in re.split(r'\W+', m.group(1)):
         if tickle_date.is_weekday(weekday):
           return True, True
@@ -111,9 +112,18 @@ class Tickler:
 
   def test_date_spec_monthly(self, date_spec, tickle_date):
     m = re.match(r'^monthly\s+(.*)$', date_spec, re.IGNORECASE)
-    if m: 
+    if m:
       for day_of_month in re.split(r'\s*,\s*', m.group(1)):
         if tickle_date.is_monthday(day_of_month):
+          return True, True
+      return True, False
+    else: return False, False
+
+  def test_date_spec_yearly(self, date_spec, tickle_date):
+    m = re.match(r'^yearly\s+(.*)$', date_spec, re.IGNORECASE)
+    if m:
+      for day_of_year in re.split(r'\s*,\s*', m.group(1)):
+        if tickle_date.is_yearday(day_of_year):
           return True, True
       return True, False
     else: return False, False
@@ -230,7 +240,7 @@ def ordinal_to_int(ordinal):
     return ordinals[ordinal]
   else:
     return None
-    
+
 class TicklerDate:
   def __init__(self, day = None):
     self.date = read_date(day)
@@ -265,6 +275,32 @@ class TicklerDate:
       , 'u':         6
     }
 
+    self.month_names = {
+      'january':     1
+      , 'jan':       1
+      , 'february':  2
+      , 'feb':       2
+      , 'march':     3
+      , 'mar':       3
+      , 'april':     4
+      , 'apr':       4
+      , 'may':       5
+      , 'june':      6
+      , 'jun':       6
+      , 'july':      7
+      , 'jul':       7
+      , 'august':    8
+      , 'aug':       8
+      , 'september': 9
+      , 'sept':      9
+      , 'sep':       9
+      , 'october':  10
+      , 'oct':      10
+      , 'november': 11
+      , 'nov':      11
+      , 'december': 12
+      , 'dec':      12
+    }
 
   def __str__(self): return str(self.date)
 
@@ -279,12 +315,12 @@ class TicklerDate:
 
     if weekday in self.weekday_names:
       return self.date.weekday() == self.weekday_names[weekday]
-    else: 
+    else:
       warning("unrecognized weekday name '%s'" % weekday)
       return False
 
   def is_monthday(self, monthday):
-    """ return True if self.date is the day of the monht in monthday
+    """ return True if self.date is the day of the month specified in monthday
 
         examples:
           10, 25  # on the tenth and twenty-fifth day of the month
@@ -366,12 +402,62 @@ class TicklerDate:
   def is_leap_year(self):
     """ return True if self.date is in a leap year """
 
-    if date.year % 4 == 0 and date.year %100 != 0:
+    if self.date.year % 4 == 0 and self.date.year %100 != 0:
       return True
-    elif date.year % 400 == 0:
+    elif self.date.year % 400 == 0:
       return True
     else:
       return False
+
+  def is_yearday(self, yearday):
+    """ return True if self.date is the day of the year specified in yearday
+
+        examples:
+          100, 250 # on the 100th and 250th days of the year
+    """
+
+    simple_yearday = re.match(r'^[0-9]+$', yearday)
+    if simple_yearday:
+      yd = (self.date - date(self.date.year, 1, 1)).days + 1
+
+      return yd == int(yearday)
+
+    month_day = re.match(
+      r"""
+        ^
+        (?P<month_name> %s)
+        \s+
+        (?P<day_of_month> [0-9]+)
+        (?:st|nd|rd|th)?
+        $
+      """ % '|'.join(self.month_names.keys())
+      , yearday
+      , re.IGNORECASE | re.VERBOSE
+    )
+    day_month = re.match(
+      r"""
+        ^
+        (?P<day_of_month> [0-9]+)
+        (?:st|nd|rd|th)?
+        \s+
+        (?P<month_name> %s)
+        $
+      """ % '|'.join(self.month_names.keys())
+      , yearday
+      , re.IGNORECASE | re.VERBOSE
+    )
+    if month_day or day_month:
+      mo = month_day if month_day else day_month
+      y = self.date.year
+      m = self.month_names[mo.group('month_name').lower()]
+      d = int(mo.group('day_of_month'))
+
+      if m == 2 and d == 29 and not self.is_leap_year():
+        return False
+      else:
+        return self.date == date(y, m, d)
+
+    return False
 
 ################################################################################
 
