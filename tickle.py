@@ -26,13 +26,13 @@ class Tickler:
       , re.IGNORECASE | re.VERBOSE
     )
 
-    self.date_tests = [ ]
-    self.date_tests.append(self.test_date_spec_none)
-    self.date_tests.append(self.test_date_spec_daily)
-    self.date_tests.append(self.test_date_spec_on_date)
-    self.date_tests.append(self.test_date_spec_weekly)
-    self.date_tests.append(self.test_date_spec_monthly)
-    self.date_tests.append(self.test_date_spec_yearly)
+    self.adverb_tests = {
+      'daily': self.test_date_spec_daily
+      , 'on': self.test_date_spec_on
+      , 'weekly': self.test_date_spec_weekly
+      , 'monthly': self.test_date_spec_monthly
+      , 'yearly': self.test_date_spec_yearly
+    }
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -75,58 +75,40 @@ class Tickler:
   def test_tickle_date(self, date_spec, tickle_date):
     """ return True if the date matches the date_spec, otherwise return False """
 
-    ds = date_spec.lower().strip() if date_spec else None
+    ds = date_spec.lower().strip() if date_spec else 'daily'
     assert isinstance(tickle_date, TicklerDate) \
       , "tickle_date argument must be a TicklerDate object"
 
-    for date_test in self.date_tests:
-      # match == True means date_spec matchs a recognized format
-      # test  == True means date_spec matchs the date
-      match, test = date_test(ds, tickle_date)
-      if match: return test
-
-    warning("unmatched date_spec '%s'" % ds)
-    return False
-
-  def test_date_spec_none(self, date_spec, tickle_date):
-    if date_spec is None: return True, True
-    else: return False, False
+    m = re.match(r'^([a-z]+)(?:\s+(.+))?$', ds)
+    if m and m.group(1) in self.adverb_tests.keys():
+      return self.adverb_tests[m.group(1)](m.group(2), tickle_date)
+    else:
+      warning("unmatched date_spec '%s'" % ds)
+      return False
 
   def test_date_spec_daily(self, date_spec, tickle_date):
-    if re.match(r'daily', date_spec, re.IGNORECASE): return True, True
-    else: return False, False
+    return True
 
-  def test_date_spec_on_date(self, date_spec, tickle_date):
-    m = re.match(r'on\s+(.*)', date_spec, re.IGNORECASE)
-    if m: return True, TicklerDate(m.group(1)) == tickle_date
-    else: return False, False
+  def test_date_spec_on(self, date_spec, tickle_date):
+    return TicklerDate(date_spec) == tickle_date
 
   def test_date_spec_weekly(self, date_spec, tickle_date):
-    m = re.match(r'^weekly\s+(.*)$', date_spec, re.IGNORECASE)
-    if m:
-      for weekday in re.split(r'\W+', m.group(1)):
-        if tickle_date.is_weekday(weekday):
-          return True, True
-      return True, False
-    else: return False, False
+    for weekday in re.split(r'\W+', date_spec):
+      if tickle_date.is_weekday(weekday):
+        return True
+    return False
 
   def test_date_spec_monthly(self, date_spec, tickle_date):
-    m = re.match(r'^monthly\s+(.*)$', date_spec, re.IGNORECASE)
-    if m:
-      for day_of_month in re.split(r'\s*,\s*', m.group(1)):
-        if tickle_date.is_monthday(day_of_month):
-          return True, True
-      return True, False
-    else: return False, False
+    for day_of_month in re.split(r'\s*,\s*', date_spec):
+      if tickle_date.is_monthday(day_of_month):
+        return True
+    return False
 
   def test_date_spec_yearly(self, date_spec, tickle_date):
-    m = re.match(r'^yearly\s+(.*)$', date_spec, re.IGNORECASE)
-    if m:
-      for day_of_year in re.split(r'\s*,\s*', m.group(1)):
-        if tickle_date.is_yearday(day_of_year):
-          return True, True
-      return True, False
-    else: return False, False
+    for day_of_year in re.split(r'\s*,\s*', date_spec):
+      if tickle_date.is_yearday(day_of_year):
+        return True
+    return False
 
   def format_tickle(self, message, indentation):
     """ return a formatted tickle message, preserving original indentation """
