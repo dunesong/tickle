@@ -5,34 +5,57 @@ from logging import warning
 import argparse
 import fileinput
 import re
+import random
 from datetime import date, timedelta
 
 class Tickler:
   """ tickler reminder system """
 
   def __init__(self):
-    self.tickle_regex = re.compile(r"""
+    self.tickle_regex = re.compile(
+      r"""
         ^
-        (?P<indent> \s*)      # capture indentation
-        [#]\s*tickle\s+       # recognize the "# tickle" prefix
-        (                     #
-          (?P<date_spec> .*?) # capture date_spec
-          \s+                 #
-        )?                    #
-        say(?:ing)?\s*        # recognize "say(ing)"
-        (?P<message> .*)      # capture tickler message
+        (?P<indent> \s*)          # capture indentation
+        [#]\s*tickle\s+           # recognize the "# tickle" prefix
+        (                         #
+          (?P<tickle_clause> .*?) # capture the rest of the tickle clause
+          \s+                     #
+        )?                        #
+        say(?:ing)?\s*            # recognize "say(ing)"
+        (?P<message> .*)          # capture tickler message
         $
       """
       , re.IGNORECASE | re.VERBOSE
     )
 
+    self.tickle_clause_regex = re.compile(
+      r"""
+        ^
+        (?P<adverb> [a-z]+)
+        (?:
+          \s+
+          (?P<date_spec> .+?)
+        )?
+        $
+      """
+      , re.IGNORECASE | re.VERBOSE
+    )
+
+    self.tickle_interval_regex = re.compile(
+      r'\s+interval\s+(?P<interval>[0-9]+)'
+      , re.IGNORECASE
+    )
+
     self.adverb_tests = {
-      'daily': self.test_date_spec_daily
-      , 'on': self.test_date_spec_on
-      , 'weekly': self.test_date_spec_weekly
-      , 'monthly': self.test_date_spec_monthly
-      , 'yearly': self.test_date_spec_yearly
+      'daily': self.test_daily_tickle
+      , 'on': self.test_on_tickle
+      , 'weekly': self.test_weekly_tickle
+      , 'monthly': self.test_monthly_tickle
+      , 'yearly': self.test_yearly_tickle
+      , 'randomly': self.test_randomly_tickle
     }
+
+    random.seed()
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -64,7 +87,7 @@ class Tickler:
 
     m = self.tickle_regex.match(line)
     if m:
-      if self.test_tickle_date(m.group('date_spec'), tickle_date):
+      if self.test_tickle_date(tickle_date, m.group('tickle_clause')):
         return self.format_tickle(m.group('message'), m.group('indent'))
       else:
         return ''
@@ -72,43 +95,61 @@ class Tickler:
     else:
       return ''
 
-  def test_tickle_date(self, date_spec, tickle_date):
-    """ return True if the date matches the date_spec, otherwise return False """
+  def test_tickle_date(self, tickle_date, tickle_clause):
+    """ return True if the date matches the tickle_clause """
 
-    ds = date_spec.lower().strip() if date_spec else 'daily'
+    tc = tickle_clause.lower().strip() if tickle_clause else 'daily'
     assert isinstance(tickle_date, TicklerDate) \
       , "tickle_date argument must be a TicklerDate object"
 
-    m = re.match(r'^([a-z]+)(?:\s+(.+))?$', ds)
-    if m and m.group(1) in self.adverb_tests.keys():
-      return self.adverb_tests[m.group(1)](m.group(2), tickle_date)
+    m = self.tickle_interval_regex.search(tc)
+    if m:
+      interval = int(m.group('interval'))
+      tc = self.tickle_interval_regex.sub('', tc, 1)
     else:
-      warning("unmatched date_spec '%s'" % ds)
+      interval = None
+
+    m = self.tickle_clause_regex.match(tc)
+    if m and m.group('adverb') in self.adverb_tests.keys():
+      return self.adverb_tests[m.group('adverb')](
+        tickle_date
+        , m.group('date_spec')
+        , interval
+      )
+    else:
+      warning("unmatched date_spec '%s'" % tc)
       return False
 
-  def test_date_spec_daily(self, date_spec, tickle_date):
+  def test_daily_tickle(self, tickle_date, date_spec, interval):
     return True
 
-  def test_date_spec_on(self, date_spec, tickle_date):
+  def test_on_tickle(self, tickle_date, date_spec, interval):
     return TicklerDate(date_spec) == tickle_date
 
-  def test_date_spec_weekly(self, date_spec, tickle_date):
+  def test_weekly_tickle(self, tickle_date, date_spec, interval):
     for weekday in re.split(r'\W+', date_spec):
       if tickle_date.is_weekday(weekday):
         return True
     return False
 
-  def test_date_spec_monthly(self, date_spec, tickle_date):
+  def test_monthly_tickle(self, tickle_date, date_spec, interval):
     for day_of_month in re.split(r'\s*,\s*', date_spec):
       if tickle_date.is_monthday(day_of_month):
         return True
     return False
 
-  def test_date_spec_yearly(self, date_spec, tickle_date):
+  def test_yearly_tickle(self, tickle_date, date_spec, interval):
     for day_of_year in re.split(r'\s*,\s*', date_spec):
       if tickle_date.is_yearday(day_of_year):
         return True
     return False
+
+  def test_randomly_tickle(self, tickle_date, date_spec, interval):
+    if interval:
+      return interval == random.randint(1, interval)
+    else:
+      warning("repeating randomly requires an interval")
+      return False
 
   def format_tickle(self, message, indentation):
     """ return a formatted tickle message, preserving original indentation """
