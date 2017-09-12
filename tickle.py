@@ -5,6 +5,7 @@ from logging import warning
 import argparse
 import fileinput
 import re
+import random
 from datetime import date, timedelta
 
 class Tickler:
@@ -46,13 +47,15 @@ class Tickler:
     )
 
     self.adverb_tests = {
-      'daily': self.test_date_spec_daily
-      , 'on': self.test_date_spec_on
-      , 'weekly': self.test_date_spec_weekly
-      , 'monthly': self.test_date_spec_monthly
-      , 'yearly': self.test_date_spec_yearly
-      , 'randomly': self.test_date_spec_randomly
+      'daily': self.test_daily_tickle
+      , 'on': self.test_on_tickle
+      , 'weekly': self.test_weekly_tickle
+      , 'monthly': self.test_monthly_tickle
+      , 'yearly': self.test_yearly_tickle
+      , 'randomly': self.test_randomly_tickle
     }
+
+    random.seed()
 
   def __call__(self, argv):
     self.process_tickler_files(argv)
@@ -102,9 +105,7 @@ class Tickler:
     m = self.tickle_interval_regex.search(tc)
     if m:
       interval = int(m.group('interval'))
-      print(tc)
       tc = self.tickle_interval_regex.sub('', tc, 1)
-      print(tc)
     else:
       interval = None
 
@@ -119,32 +120,36 @@ class Tickler:
       warning("unmatched date_spec '%s'" % tc)
       return False
 
-  def test_date_spec_daily(self, tickle_date, date_spec, interval):
+  def test_daily_tickle(self, tickle_date, date_spec, interval):
     return True
 
-  def test_date_spec_on(self, tickle_date, date_spec, interval):
+  def test_on_tickle(self, tickle_date, date_spec, interval):
     return TicklerDate(date_spec) == tickle_date
 
-  def test_date_spec_weekly(self, tickle_date, date_spec, interval):
+  def test_weekly_tickle(self, tickle_date, date_spec, interval):
     for weekday in re.split(r'\W+', date_spec):
       if tickle_date.is_weekday(weekday):
         return True
     return False
 
-  def test_date_spec_monthly(self, tickle_date, date_spec, interval):
+  def test_monthly_tickle(self, tickle_date, date_spec, interval):
     for day_of_month in re.split(r'\s*,\s*', date_spec):
       if tickle_date.is_monthday(day_of_month):
         return True
     return False
 
-  def test_date_spec_yearly(self, tickle_date, date_spec, interval):
+  def test_yearly_tickle(self, tickle_date, date_spec, interval):
     for day_of_year in re.split(r'\s*,\s*', date_spec):
       if tickle_date.is_yearday(day_of_year):
         return True
     return False
 
-  def test_date_spec_randomly(self, tickle_date, date_spec, interval):
-    return True
+  def test_randomly_tickle(self, tickle_date, date_spec, interval):
+    if interval:
+      return interval == random.randint(1, interval)
+    else:
+      warning("repeating randomly requires an interval")
+      return False
 
   def format_tickle(self, message, indentation):
     """ return a formatted tickle message, preserving original indentation """
