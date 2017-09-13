@@ -41,6 +41,16 @@ class Tickler:
       , re.IGNORECASE | re.VERBOSE
     )
 
+    self.tickle_start_date_regex = re.compile(
+      r'\s+from\s+(?P<start_date>\S+)'
+      , re.IGNORECASE
+    )
+
+    self.tickle_end_date_regex = re.compile(
+      r'\s+until\s+(?P<end_date>\S+)'
+      , re.IGNORECASE
+    )
+
     self.tickle_interval_regex = re.compile(
       r'\s+interval\s+(?P<interval>[0-9]+)'
       , re.IGNORECASE
@@ -102,10 +112,26 @@ class Tickler:
     assert isinstance(tickle_date, TicklerDate) \
       , "tickle_date argument must be a TicklerDate object"
 
+    m = self.tickle_start_date_regex.search(tc)
+    if m:
+      if TicklerDate(m.group('start_date')) > tickle_date:
+        return False
+      tc = self.tickle_start_date_regex.sub('', tc, count=1)
+    else:
+      start_date = None
+
+    m = self.tickle_end_date_regex.search(tc)
+    if m:
+      if TicklerDate(m.group('end_date')) < tickle_date:
+        return False
+      tc = self.tickle_end_date_regex.sub('', tc, count=1)
+    else:
+      end_date = None
+
     m = self.tickle_interval_regex.search(tc)
     if m:
       interval = int(m.group('interval'))
-      tc = self.tickle_interval_regex.sub('', tc, 1)
+      tc = self.tickle_interval_regex.sub('', tc, count=1)
     else:
       interval = None
 
@@ -330,6 +356,18 @@ class TicklerDate:
   def __eq__(self, other):
     if isinstance(other, self.__class__):
       return self.date == other.date
+    else:
+      return False
+
+  def __lt__(self, other):
+    if isinstance(other, self.__class__):
+      return self.date < other.date
+    else:
+      return False
+
+  def __gt__(self, other):
+    if isinstance(other, self.__class__):
+      return self.date > other.date
     else:
       return False
 
