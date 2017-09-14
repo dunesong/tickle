@@ -52,8 +52,15 @@ class Tickler:
     )
 
     self.tickle_interval_regex = re.compile(
-      r'\s+interval\s+(?P<interval>[0-9]+)'
-      , re.IGNORECASE
+      r"""
+        \s+interval\s+
+        (?P<interval>[0-9]+)
+        (?:
+          \s*
+          (?: %s)
+        )?
+      """ % TicklerInterval.units_regex.pattern
+      , re.IGNORECASE | re.VERBOSE
     )
 
     self.adverb_tests = {
@@ -114,19 +121,18 @@ class Tickler:
 
     m = self.tickle_start_date_regex.search(tc)
     if m:
-      if TicklerDate(m.group('start_date')) > tickle_date:
-        return False
+      start_date = TicklerDate(m.group('start_date'))
       tc = self.tickle_start_date_regex.sub('', tc, count=1)
+      if start_date > tickle_date:
+        return False
     else:
       start_date = None
 
     m = self.tickle_end_date_regex.search(tc)
     if m:
+      tc = self.tickle_end_date_regex.sub('', tc, count=1)
       if TicklerDate(m.group('end_date')) < tickle_date:
         return False
-      tc = self.tickle_end_date_regex.sub('', tc, count=1)
-    else:
-      end_date = None
 
     m = self.tickle_interval_regex.search(tc)
     if m:
@@ -289,6 +295,8 @@ def ordinal_to_int(ordinal):
     return ordinals[ordinal]
   else:
     return None
+
+################################################################################
 
 class TicklerDate:
   def __init__(self, day = None):
@@ -519,6 +527,15 @@ class TicklerDate:
         return self.date == date(y, m, d)
 
     return False
+
+################################################################################
+
+class TicklerInterval:
+  units_regex = re.compile('d|days?|w|weeks?|m|months?|y|years?')
+
+  def __init__(self, interval, start_date = None):
+    self.interval = self.read_interval(interval)
+    self.start_date = start_date
 
 ################################################################################
 
